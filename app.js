@@ -331,6 +331,173 @@ function showScreen(id) {
   el.classList.add('active');
   el.scrollTop = 0;
 }
+// ═══════════════════════════════════════════════════════════════
+// SCENE CONTROLLER — pixel-art SVG office animations
+// ═══════════════════════════════════════════════════════════════
+
+window.sceneController = (function() {
+  let _state = 'hidden';
+  let _bossX  = 320; // starts off-screen right
+  let _walkRAF = null;
+
+  // Target X positions (boss-group SVG translate X)
+  const POS = {
+    hidden:   350,  // fully off-screen right
+    peeking:  292,  // just peeking from right edge
+    walking:  292,  // start of walk (same as peeking)
+    looming:  195,  // standing right behind avatar
+    outburst: 195,  // same position, fire + shake
+  };
+
+  function getBossGroup() { return document.getElementById('boss-group'); }
+  function getOutfire1()  { return document.getElementById('outburst-fire'); }
+  function getOutfire2()  { return document.getElementById('outburst-fire2'); }
+  function getFootTap()   { return document.getElementById('boss-foot-tap'); }
+  function getBrowL()     { return document.getElementById('boss-brow-l'); }
+  function getBrowR()     { return document.getElementById('boss-brow-r'); }
+  function getBossMouth() { return document.getElementById('boss-mouth'); }
+
+  function setTranslate(el, x, y) {
+    if (!el) return;
+    el.setAttribute('transform', `translate(${Math.round(x)}, ${y})`);
+  }
+
+  function cancelWalk() {
+    if (_walkRAF) { cancelAnimationFrame(_walkRAF); _walkRAF = null; }
+  }
+
+  function walkTo(targetX, bossY, speed, onDone) {
+    cancelWalk();
+    function step() {
+      const dx = targetX - _bossX;
+      if (Math.abs(dx) < 1) {
+        _bossX = targetX;
+        setTranslate(getBossGroup(), _bossX, bossY);
+        if (onDone) onDone();
+        return;
+      }
+      _bossX += dx * speed;
+      setTranslate(getBossGroup(), _bossX, bossY);
+      _walkRAF = requestAnimationFrame(step);
+    }
+    _walkRAF = requestAnimationFrame(step);
+  }
+
+  function resetFaceNeutral() {
+    const bl = getBrowL(), br = getBrowR(), m = getBossMouth();
+    if (bl) bl.setAttribute('y', '5');
+    if (br) br.setAttribute('y', '5');
+    if (m)  { m.setAttribute('width', '6'); m.setAttribute('fill', '#a06050'); }
+  }
+
+  function setFaceAngry() {
+    const bl = getBrowL(), br = getBrowR(), m = getBossMouth();
+    // Angled angry brows
+    if (bl) bl.setAttribute('y', '6');
+    if (br) br.setAttribute('y', '4');
+    if (m)  { m.setAttribute('width', '4'); m.setAttribute('fill', '#882020'); }
+  }
+
+  function showFire(on) {
+    const f1 = getOutfire1(), f2 = getOutfire2();
+    if (f1) f1.setAttribute('opacity', on ? '1' : '0');
+    if (f2) f2.setAttribute('opacity', on ? '1' : '0');
+  }
+
+  function showFootTap(on) {
+    const ft = getFootTap();
+    if (ft) ft.setAttribute('opacity', on ? '1' : '0');
+  }
+
+  function setState(s) {
+    if (_state === s) return;
+    _state = s;
+
+    switch(s) {
+
+      case 'hidden':
+        cancelWalk();
+        _bossX = POS.hidden;
+        setTranslate(getBossGroup(), _bossX, 88);
+        showFire(false);
+        showFootTap(false);
+        resetFaceNeutral();
+        break;
+
+      case 'peeking':
+        // Slide boss in from right so only head+shoulder peek
+        cancelWalk();
+        _bossX = POS.peeking;
+        setTranslate(getBossGroup(), _bossX, 88);
+        showFire(false);
+        showFootTap(false);
+        resetFaceNeutral();
+        break;
+
+      case 'walking':
+        // Animate walk from peek position to behind avatar
+        showFire(false);
+        showFootTap(false);
+        resetFaceNeutral();
+        // Start from peeking position if not already there
+        if (_bossX > POS.peeking + 5) {
+          _bossX = POS.peeking;
+          setTranslate(getBossGroup(), _bossX, 88);
+        }
+        walkTo(POS.looming, 88, 0.06, () => {
+          // Arrived — now loom
+          showFootTap(true);
+          setFaceAngry();
+        });
+        break;
+
+      case 'looming':
+        cancelWalk();
+        _bossX = POS.looming;
+        setTranslate(getBossGroup(), _bossX, 88);
+        showFire(false);
+        showFootTap(true);
+        setFaceAngry();
+        break;
+
+      case 'outburst':
+        cancelWalk();
+        _bossX = POS.looming;
+        setTranslate(getBossGroup(), _bossX, 88);
+        showFire(true);
+        showFootTap(false);
+        setFaceAngry();
+        // Auto-reset after 2.2s
+        setTimeout(() => {
+          showFire(false);
+          resetFaceNeutral();
+        }, 2200);
+        break;
+    }
+  }
+
+  // Update timer display colour in SVG
+  function updateTimerSvg(val) {
+    const el = document.getElementById('timer-display');
+    if (!el) return;
+    el.textContent = val;
+    // Colour: green→amber→red
+    if (val <= 20)      el.setAttribute('fill', '#ff2200');
+    else if (val <= 40) el.setAttribute('fill', '#ff9900');
+    else                el.setAttribute('fill', '#cc2222');
+
+    // Timer wrap pulse class
+    const wrap = document.getElementById('pixel-timer');
+    if (!wrap) return;
+    wrap.classList.remove('warn-amber', 'warn-red');
+    if (val <= 20)      wrap.classList.add('warn-red');
+    else if (val <= 40) wrap.classList.add('warn-amber');
+  }
+
+  return { setState, updateTimerSvg };
+})();
+
+
 
 function getUrlGroup() {
   const params = new URLSearchParams(window.location.search);
@@ -560,25 +727,25 @@ function resetTimer() {
   clearInterval(state.timerInterval);
   state.timerVal = CONFIG.timeLimit;
   updateTimerDisplay();
+  setBossState('hidden');
   state.timerInterval = setInterval(tickTimer, 1000);
 }
 
 function updateTimerDisplay() {
   const t = state.timerVal;
-  $('timer-display').textContent = t;
-  const ring = $('timer-ring');
-  ring.classList.remove('warn-amber', 'warn-red');
-  if (t <= 20) ring.classList.add('warn-red');
-  else if (t <= 40) ring.classList.add('warn-amber');
+  // Update SVG timer (new scene)
+  if (window.sceneController) window.sceneController.updateTimerSvg(t);
 }
 
 function tickTimer() {
   state.timerVal--;
   updateTimerDisplay();
 
-  if (state.timerVal === 40) showManager('Better hurry…');
-  if (state.timerVal === 20) triggerScreenShake();
-  if (state.timerVal === 10) updateManagerSpeech('DECIDE NOW!');
+  // Boss progression: clock counts 60→0
+  // 40s left (20s elapsed)  → Boss peeks from corner
+  // 20s left (40s elapsed)  → Boss walks to desk, stands impatiently
+  if (state.timerVal === 40) setBossState('peeking');
+  if (state.timerVal === 20) setBossState('walking');
 
   if (state.timerVal <= 0) {
     clearInterval(state.timerInterval);
@@ -591,21 +758,29 @@ function stopTimer() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// 8. MANAGER AVATAR
+// 8. SCENE / BOSS ANIMATION CONTROLLER
 // ═══════════════════════════════════════════════════════════════
 
-function showManager(msg) {
-  const wrap = $('manager-wrap');
-  $('manager-speech').textContent = msg;
-  wrap.classList.add('looming');
-}
-
-function updateManagerSpeech(msg) {
-  $('manager-speech').textContent = msg;
+// Boss states: 'hidden' | 'peeking' | 'walking' | 'looming' | 'outburst'
+function setBossState(s) {
+  const scene = $('office-scene');
+  if (!scene) return;
+  scene.dataset.bossState = s;
+  // Delegate visual updates to the SVG scene's own logic
+  if (window.sceneController) window.sceneController.setState(s);
 }
 
 function resetManagerAvatar() {
-  $('manager-wrap').classList.remove('looming');
+  setBossState('hidden');
+}
+
+function triggerOutburst() {
+  setBossState('outburst');
+  const el = $('screen-game');
+  el.classList.add('shaking');
+  setTimeout(() => el.classList.remove('shaking'), 800);
+  // Auto-clear outburst after 2s
+  setTimeout(() => setBossState('hidden'), 2000);
 }
 
 function triggerScreenShake() {
@@ -704,6 +879,7 @@ function timeOut() {
   }
 
   document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+  triggerOutburst();
   showResultOverlay(false, 'TIMEOUT', caseData, true, () => advanceCase());
 }
 
@@ -741,6 +917,7 @@ function showResultOverlay(correct, chosen, caseData, isTimeout, onDone) {
     detail.textContent = `Correct: ${caseData.correctAnswer} — ${caseData.options[caseData.correctAnswer]}`;
     delta.textContent  = `-${CONFIG.penaltyMoney}€ · -${CONFIG.penaltyHearts}❤️`;
     delta.className    = 'result-delta negative';
+    triggerOutburst();
   }
 
   setTimeout(() => {
