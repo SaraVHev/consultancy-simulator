@@ -29,7 +29,7 @@
   --font-pixel:   'Press Start 2P', monospace;
   --font-mono:    'Share Tech Mono', monospace;
   --font-vt:      'VT323', monospace;
-  --hud-h:        56px;
+  --hud-h:        48px;
   --radius:       4px;
   --shadow-glow:  0 0 12px #00ff8830, 0 0 40px #00ff8812;
 }
@@ -227,7 +227,7 @@ html, body {
   flex-shrink: 0;
   display: flex; align-items: center; justify-content: space-between;
   background: #1a1008; border-bottom: 3px solid #3a2008;
-  padding: 4px 10px; gap: 6px; height: var(--hud-h);
+  padding: 3px 10px; gap: 6px; height: var(--hud-h);
   z-index: 100;
 }
 .hud-left { display: flex; flex-direction: row; gap: 6px; align-items: center; }
@@ -258,18 +258,24 @@ html, body {
 /* OFFICE SCENE */
 .office-scene-wrap {
   flex-shrink: 0; width: 100%;
-  height: 155px; overflow: hidden;
-  background: #a8d8ea; position: relative;
+  height: clamp(120px, 28vw, 200px);
+  overflow: hidden;          /* clips boss when off-screen */
+  background: #a8d8ea;
+  position: relative;
+  /* hard clip — nothing escapes this box */
+  clip-path: inset(0);
 }
 .office-scene-wrap svg {
-  display: block; width: 100%; height: 155px;
+  display: block; width: 100%;
+  height: 100%;
   image-rendering: pixelated; image-rendering: crisp-edges;
+  overflow: hidden;
 }
 
 /* QUESTION BOX */
 .case-question-box {
   flex-shrink: 0;
-  margin: 5px 8px 3px; padding: 8px 10px 6px;
+  margin: 3px 8px 2px; padding: 6px 10px 5px;
   background: #c8c0b0;
   border: 2px solid #888070;
   border-right: 3px solid #555040; border-bottom: 3px solid #555040;
@@ -291,17 +297,17 @@ html, body {
 }
 .options-grid {
   flex: 1; display: flex; flex-direction: column;
-  gap: 4px; padding: 5px 4px 5px 8px; overflow-y: auto;
+  gap: 3px; padding: 4px 4px 4px 8px; overflow-y: auto;
 }
 .option-btn {
   background: #c0b8a8;
   border: 2px solid #888070;
   border-right: 3px solid #555040; border-bottom: 3px solid #555040;
-  border-radius: 2px; padding: 9px 8px 9px 34px;
-  font-family: var(--font-vt); font-size: 17px;
+  border-radius: 2px; padding: 7px 8px 7px 34px;
+  font-family: var(--font-vt); font-size: 16px;
   color: #1a1008; cursor: pointer; text-align: left;
   line-height: 1.2; transition: background 0.1s, transform 0.06s;
-  position: relative; min-height: 38px;
+  position: relative; min-height: 34px;
 }
 .option-btn::before {
   content: attr(data-label);
@@ -330,7 +336,7 @@ html, body {
 /* AI PANEL */
 .ai-panel {
   flex-shrink: 0; background: #1a1008;
-  border-top: 3px solid #3a2008; padding: 6px 10px 8px;
+  border-top: 3px solid #3a2008; padding: 4px 10px 6px;
 }
 .ai-panel-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
 .ai-avatar-icon { font-size: 18px; filter: drop-shadow(0 0 5px var(--blue)); }
@@ -651,7 +657,7 @@ html, body {
 </div>
 
 <!-- SCREEN 4: GAME -->
-<div id="screen-game" class="screen" style="position:fixed;">
+<div id="screen-game" class="screen">
 
   <!-- HUD -->
   <div class="hud-bar">
@@ -712,7 +718,13 @@ html, body {
   <!-- OFFICE SCENE SVG -->
   <div class="office-scene-wrap">
     <svg id="office-scene" viewBox="0 0 320 155" xmlns="http://www.w3.org/2000/svg"
-         preserveAspectRatio="xMidYMid slice" data-boss-state="hidden">
+         preserveAspectRatio="xMidYMax meet" data-boss-state="hidden"
+         style="overflow:hidden;">
+      <defs>
+        <clipPath id="scene-clip">
+          <rect x="0" y="0" width="320" height="155"/>
+        </clipPath>
+      </defs>
 
       <!-- SKY -->
       <rect x="0" y="0" width="320" height="155" fill="#b8e0f0"/>
@@ -824,7 +836,7 @@ html, body {
       </g>
 
       <!-- MR. BOSS — starts off-screen right, animated by JS -->
-      <g id="boss-group" transform="translate(350,88)">
+      <g id="boss-group" transform="translate(350,88)" clip-path="url(#scene-clip)">
         <!-- Briefcase -->
         <rect x="24" y="28" width="12" height="9"  fill="#8a6030"/>
         <rect x="25" y="29" width="10" height="7"  fill="#a07840"/>
@@ -876,7 +888,7 @@ html, body {
         </g>
       </g>
 
-      <!-- OUTBURST FIRES (hidden until triggered) -->
+      <!-- OUTBURST FIRES (hidden until triggered, clipped to scene) -->
       <g id="outburst-fire" opacity="0">
         <!-- Left fire -->
         <rect x="182" y="90" width="10" height="18" fill="#ff6600"/>
@@ -1616,16 +1628,44 @@ window.sceneController = (function() {
 
 
 
-// ── GROUP OVERRIDE FOR LOCAL FILE TESTING ──
-// Change this to 'A', 'B', 'C', or 'D' to test different groups
-// when opening as a local file (file:/// URLs don't support ?group=X)
-const LOCAL_GROUP_OVERRIDE = null; // e.g. set to 'D' to test Group D
-
+// ── GROUP AUTO-RANDOMIZATION ──
+// Balanced assignment across A/B/C/D.
+// Priority: URL param (testing) → existing session → balanced random.
 function getUrlGroup() {
-  if (LOCAL_GROUP_OVERRIDE) return LOCAL_GROUP_OVERRIDE;
+  // 1. URL override for testing: ?group=B etc.
   const params = new URLSearchParams(window.location.search);
-  const g = (params.get('group') || 'A').toUpperCase();
-  return ['A','B','C','D'].includes(g) ? g : 'A';
+  const urlGroup = params.get('group');
+  if (urlGroup && ['A','B','C','D'].includes(urlGroup.toUpperCase())) {
+    return urlGroup.toUpperCase();
+  }
+
+  // 2. Reuse group if participant already started this session
+  //    (prevents re-randomization on accidental refresh)
+  try {
+    const sg = sessionStorage.getItem('sim_group');
+    if (sg && ['A','B','C','D'].includes(sg)) return sg;
+  } catch(e) {}
+
+  // 3. Balanced random: pick the group(s) with fewest completions on this device,
+  //    then choose randomly among ties. Falls back to pure random if storage blocked.
+  let counts = { A: 0, B: 0, C: 0, D: 0 };
+  try {
+    const stored = localStorage.getItem('sim_group_counts');
+    if (stored) counts = Object.assign(counts, JSON.parse(stored));
+  } catch(e) {}
+
+  const minVal = Math.min(counts.A, counts.B, counts.C, counts.D);
+  const pool = ['A','B','C','D'].filter(g => counts[g] === minVal);
+  const chosen = pool[Math.floor(Math.random() * pool.length)];
+
+  // Persist the count and lock this session to the chosen group
+  counts[chosen] = (counts[chosen] || 0) + 1;
+  try {
+    localStorage.setItem('sim_group_counts', JSON.stringify(counts));
+    sessionStorage.setItem('sim_group', chosen);
+  } catch(e) {}
+
+  return chosen;
 }
 
 function heartsDisplay(n) {

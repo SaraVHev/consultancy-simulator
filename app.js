@@ -498,6 +498,7 @@ window.sceneController = (function() {
 })();
 
 
+const LOCAL_GROUP_OVERRIDE = 'D'; // Change to 'B', 'C', or 'D' to test
 
 function getUrlGroup() {
   const params = new URLSearchParams(window.location.search);
