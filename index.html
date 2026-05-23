@@ -423,50 +423,92 @@ html, body {
   text-shadow: 2px 2px 0 rgba(0,0,0,0.15);
   letter-spacing: 2px; line-height: 1.4;
 }
-.cork-progress-wrap {
-  display: flex; align-items: center; gap: 0; width: 100%;
-  background: #fff8ee; border: 3px solid #5a3010;
-  border-right: 4px solid #3a1a04; border-bottom: 4px solid #3a1a04;
-  border-radius: 30px; height: 52px; padding: 4px; overflow: visible;
+/* ── MEDAL ROW ── */
+.cork-medals-row {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; width: 100%; gap: 4px;
 }
-.cork-medal { position: relative; z-index: 2; flex-shrink: 0; }
-.medal-ribbon {
-  width: 14px; height: 16px; background: #4ecdc4;
-  margin: 0 auto;
-  clip-path: polygon(0 0,100% 0,100% 80%,50% 100%,0 80%);
+.cork-medal-item {
+  display: flex; flex-direction: column; align-items: center; flex: 1;
 }
-.medal-body {
-  width: 38px; height: 38px; border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #ffe066, #f5a800, #c87000);
-  border: 3px solid #a06000; display: flex; align-items: center;
-  justify-content: center; margin-top: -12px; box-shadow: 2px 2px 0 #7a4000;
+.medal-rbn {
+  width: 10px; height: 14px; background: #4ecdc4; margin: 0 auto;
+  clip-path: polygon(0 0,100% 0,100% 78%,50% 100%,0 78%);
 }
-.medal-text { font-family: var(--font-pixel); font-size: 5px; color: #5a3000; text-align: center; line-height: 1.3; }
-.cork-progress-track {
-  flex: 1; display: flex; align-items: center;
-  justify-content: space-evenly; padding: 0 6px;
+.medal-rbn-grey { background: #aaa; }
+.medal-cir {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: -8px; border: 3px solid #a06000;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.3);
 }
-.medal-slot {
-  width: 26px; height: 26px; border-radius: 50%;
-  background: radial-gradient(circle, #ccc 60%, #aaa);
-  border: 2px solid #999; opacity: 0.5;
+.medal-gold {
+  background: radial-gradient(circle at 35% 30%, #fff4a0, #f5c800, #c87000);
+  border-color: #a06000;
 }
-.cork-stat-block { display: flex; align-items: center; gap: 14px; width: 100%; }
-.cork-coin-icon { flex-shrink: 0; filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.25)); }
-.cork-stat-nums { display: flex; flex-direction: column; gap: 1px; }
-.cork-stat-row {
-  font-family: var(--font-pixel); font-size: 13px;
-  color: #1a0c04; display: flex; align-items: baseline; gap: 8px;
+.medal-grey {
+  background: radial-gradient(circle at 35% 30%, #e0e0e0, #b8b8b8, #888);
+  border-color: #777; opacity: 0.55;
 }
-.cork-label { font-size: 7px; color: #7a5030; text-transform: uppercase; letter-spacing: 1px; }
-.cork-stat-row.pre   { font-size: 10px; color: #5a3010; }
-.cork-stat-row.total { font-size: 10px; }
-.cork-stat-row.new-val {
-  font-size: 20px; font-weight: bold;
-  text-decoration: underline; text-underline-offset: 3px; color: #1a6010;
+.medal-cir.medal-gold { opacity: 1; }
+.medal-lbl {
+  font-family: var(--font-pixel); font-size: 4px;
+  color: #5a3000; text-align: center; line-height: 1.3;
 }
-.cork-stat-row.new-val.negative { color: #8a1010; }
-.cork-stat-row.new-val.positive { color: #1a6010; }
+.medal-grey .medal-lbl { color: #555; }
+
+/* ── MEDAL PROGRESS TRACK ── */
+.cork-medals-wrap {
+  width: 100%;
+  position: relative;
+}
+.cork-medals-track {
+  position: absolute;
+  top: 50%;
+  left: 18px; right: 18px;
+  height: 8px;
+  background: #a07848;
+  border: 2px solid #7a5020;
+  border-radius: 4px;
+  transform: translateY(-4px);
+  z-index: 0;
+  overflow: hidden;
+}
+.cork-medals-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ffe066, #f5a800);
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+.cork-medals-row {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── STAT BLOCKS ── */
+.cork-stat-block { display: flex; align-items: center; gap: 12px; width: 100%; }
+.cork-icon-wrap  { flex-shrink: 0; filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.2)); }
+.cork-stat-nums  { display: flex; flex-direction: column; gap: 2px; }
+.cork-label { font-size: 7px; color: #7a5030; text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-pixel); }
+.cork-row-pre {
+  font-family: var(--font-pixel); font-size: 9px; color: #5a3010;
+  display: flex; align-items: baseline; gap: 6px;
+}
+.cork-row-delta {
+  font-family: var(--font-pixel); font-size: 18px;
+  color: #1a6010; line-height: 1.1;
+}
+.cork-row-delta.positive { color: #1a6010; }
+.cork-row-delta.negative { color: #8a1010; }
+.cork-divider {
+  width: 100%; height: 2px; background: #5a3010;
+  margin: 3px 0; border-radius: 1px;
+}
+.cork-row-total {
+  font-family: var(--font-pixel); font-size: 10px; color: #1a0c04;
+  display: flex; align-items: baseline; gap: 6px;
+}
 .cork-bottom-row {
   display: flex; align-items: flex-end;
   justify-content: space-between; width: 100%; margin-top: 4px;
@@ -564,7 +606,7 @@ html, body {
       <div class="title-sub">v1.0 — Research Edition</div>
     </div>
     <div class="disclaimer-box">
-      <div class="disclaimer-header">📋 PARTICIPANT INFORMATION</div>
+      <div class="disclaimer-header">👋 WELCOME!</div>
       <div class="disclaimer-text">
         Welcome to the Consultancy Simulator.<br><br>
         You are about to participate in a business simulation study. Before starting, please read the following information.<br><br>
@@ -609,7 +651,7 @@ html, body {
 </div>
 
 <!-- SCREEN 4: GAME -->
-<div id="screen-game" class="screen">
+<div id="screen-game" class="screen" style="position:fixed;">
 
   <!-- HUD -->
   <div class="hud-bar">
@@ -636,6 +678,12 @@ html, body {
       </div>
     </div>
     <div class="hud-right">
+      <button id="btn-pause" onclick="app.togglePause()"
+        style="font-family:'Press Start 2P',monospace;font-size:6px;padding:4px 7px;
+               background:#2a2010;border:1px solid #c8a070;color:#c8a070;
+               border-radius:3px;cursor:pointer;white-space:nowrap;margin-right:4px;">
+        ⏸ PAUSE
+      </button>
       <div class="hud-stat">
         <svg viewBox="0 0 20 20" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
           <rect x="5" y="1" width="10" height="18" fill="#f5a800"/>
@@ -650,18 +698,11 @@ html, body {
         <span id="hud-money" class="hud-stat-val">1000</span>
       </div>
       <div class="hud-stat">
-        <svg viewBox="0 0 20 18" width="20" height="18" xmlns="http://www.w3.org/2000/svg">
-          <rect x="2"  y="4"  width="6"  height="3"  fill="#cc0000"/>
-          <rect x="12" y="4"  width="6"  height="3"  fill="#cc0000"/>
-          <rect x="0"  y="6"  width="8"  height="8"  fill="#ee1111"/>
-          <rect x="12" y="6"  width="8"  height="8"  fill="#ee1111"/>
-          <rect x="4"  y="2"  width="4"  height="4"  fill="#ee1111"/>
-          <rect x="12" y="2"  width="4"  height="4"  fill="#ee1111"/>
-          <rect x="6"  y="2"  width="8"  height="2"  fill="#ee1111"/>
-          <rect x="2"  y="10" width="16" height="4"  fill="#ee1111"/>
-          <rect x="4"  y="14" width="12" height="2"  fill="#cc0000"/>
-          <rect x="4"  y="6"  width="2"  height="2"  fill="#ff6666"/>
-          <rect x="6"  y="4"  width="2"  height="2"  fill="#ff6666"/>
+        <svg viewBox="0 0 14 12" width="24" height="21" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="2,0 4,0 4,1 10,1 10,0 12,0 12,2 14,2 14,5 12,5 12,7 10,7 10,9 8,9 8,10 6,10 6,9 4,9 4,7 2,7 2,5 0,5 0,2 2,2" fill="#ee1111"/>
+          <polygon points="2,0 4,0 4,2 2,2" fill="#ff5555"/>
+          <polygon points="4,0 6,0 6,2 4,2" fill="#ff5555"/>
+          <polygon points="12,5 14,5 14,7 12,7 10,7 10,9 8,9 8,10 6,10 6,9 4,9 4,7 2,7 2,5" fill="#cc0000"/>
         </svg>
         <span id="hud-hearts" class="hud-stat-val">5</span>
       </div>
@@ -880,13 +921,24 @@ html, body {
     </button>
   </div>
 
+  <!-- PAUSE OVERLAY — covers game screen, blocks interaction -->
+  <div id="pause-overlay" style="display:none; position:absolute; inset:0; z-index:150;
+       background:rgba(10,8,4,0.82); backdrop-filter:blur(3px);
+       align-items:center; justify-content:center; flex-direction:column; gap:16px;">
+    <div style="font-family:'Press Start 2P',monospace; font-size:18px; color:#c8a070;
+                text-shadow:0 0 20px #c8a07080; letter-spacing:3px;">PAUSED</div>
+    <button onclick="app.togglePause()"
+      style="font-family:'Press Start 2P',monospace; font-size:9px; padding:12px 24px;
+             background:#c8a070; color:#1a0e04; border:none; border-radius:3px;
+             cursor:pointer; box-shadow:3px 3px 0 #7a5030;">▶ RESUME</button>
+  </div>
+
   <!-- AI PANEL -->
   <div class="ai-panel">
     <div class="ai-panel-header">
       <div class="ai-avatar-icon">🤖</div>
       <div class="ai-info">
-        <div class="ai-badge">AI ASSISTANT</div>
-        <div class="ai-name">ConsultBot</div>
+        <div class="ai-badge">ConsultBot</div>
       </div>
       <button class="btn-source" id="btn-source" style="display:none;" onclick="app.handleSourceClick()">
         📖 SOURCE
@@ -902,20 +954,42 @@ html, body {
   <div class="cork-border-top"></div>
   <div class="screen-inner centered-column cork-inner">
     <div class="cork-headline" id="day-end-title">NICE JOB TODAY!</div>
-    <div class="cork-progress-wrap">
-      <div class="cork-medal">
-        <div class="medal-ribbon"></div>
-        <div class="medal-body"><span class="medal-text" id="medal-label">great job!</span></div>
+    <!-- MEDAL PROGRESS BAR — 5 medals, one per day, fills as days are completed -->
+    <div class="cork-medals-wrap">
+      <div class="cork-medals-track">
+        <div class="cork-medals-fill" id="cork-medals-fill"></div>
       </div>
-      <div class="cork-progress-track">
-        <div class="medal-slot"></div><div class="medal-slot"></div>
-        <div class="medal-slot"></div><div class="medal-slot"></div>
+    <div class="cork-medals-row">
+      <!-- Day 1 medal: always the active/earned one shown on left (current day) -->
+      <div class="cork-medal-item" id="medal-day-1">
+        <div class="medal-rbn"></div>
+        <div class="medal-cir medal-gold">
+          <span class="medal-lbl" id="medal-label">day 1</span>
+        </div>
+      </div>
+      <div class="cork-medal-item" id="medal-day-2">
+        <div class="medal-rbn medal-rbn-grey"></div>
+        <div class="medal-cir medal-grey"><span class="medal-lbl">day 2</span></div>
+      </div>
+      <div class="cork-medal-item" id="medal-day-3">
+        <div class="medal-rbn medal-rbn-grey"></div>
+        <div class="medal-cir medal-grey"><span class="medal-lbl">day 3</span></div>
+      </div>
+      <div class="cork-medal-item" id="medal-day-4">
+        <div class="medal-rbn medal-rbn-grey"></div>
+        <div class="medal-cir medal-grey"><span class="medal-lbl">day 4</span></div>
+      </div>
+      <div class="cork-medal-item" id="medal-day-5">
+        <div class="medal-rbn medal-rbn-grey"></div>
+        <div class="medal-cir medal-grey"><span class="medal-lbl">day 5</span></div>
       </div>
     </div>
-    <!-- Money -->
+    </div><!-- end cork-medals-wrap -->
+
+    <!-- MONEY STAT -->
     <div class="cork-stat-block">
-      <div class="cork-coin-icon">
-        <svg viewBox="0 0 28 28" width="48" height="48" xmlns="http://www.w3.org/2000/svg">
+      <div class="cork-icon-wrap">
+        <svg viewBox="0 0 28 28" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
           <rect x="4"  y="0"  width="20" height="28" fill="#f5a800"/>
           <rect x="0"  y="4"  width="28" height="20" fill="#f5a800"/>
           <rect x="2"  y="2"  width="24" height="24" fill="#ffc200"/>
@@ -927,33 +1001,28 @@ html, body {
         </svg>
       </div>
       <div class="cork-stat-nums">
-        <div class="cork-stat-row pre"><span id="cork-money-pre">1000</span><span class="cork-label">pre.</span></div>
-        <div class="cork-stat-row new-val positive" id="cork-money-delta">+150</div>
-        <div class="cork-stat-row total"><span id="cork-money-total">1150</span><span class="cork-label">total</span></div>
+        <div class="cork-row-pre"><span id="cork-money-pre">1000</span> <span class="cork-label">pre.</span></div>
+        <div class="cork-row-delta positive" id="cork-money-delta">+150</div>
+        <div class="cork-divider"></div>
+        <div class="cork-row-total"><span id="cork-money-total">1150</span> <span class="cork-label">total</span></div>
       </div>
     </div>
-    <!-- Hearts -->
+
+    <!-- HEARTS STAT -->
     <div class="cork-stat-block">
-      <div class="cork-coin-icon">
-        <svg viewBox="0 0 28 26" width="48" height="44" xmlns="http://www.w3.org/2000/svg">
-          <rect x="2"  y="6"  width="6"  height="3"  fill="#880000"/>
-          <rect x="20" y="6"  width="6"  height="3"  fill="#880000"/>
-          <rect x="0"  y="8"  width="12" height="12" fill="#cc0000"/>
-          <rect x="16" y="8"  width="12" height="12" fill="#cc0000"/>
-          <rect x="6"  y="2"  width="6"  height="6"  fill="#cc0000"/>
-          <rect x="16" y="2"  width="6"  height="6"  fill="#cc0000"/>
-          <rect x="8"  y="0"  width="12" height="4"  fill="#ee1111"/>
-          <rect x="2"  y="10" width="24" height="10" fill="#ee1111"/>
-          <rect x="4"  y="20" width="20" height="4"  fill="#cc0000"/>
-          <rect x="8"  y="24" width="12" height="2"  fill="#aa0000"/>
-          <rect x="4"  y="8"  width="4"  height="4"  fill="#ff6666"/>
-          <rect x="8"  y="4"  width="2"  height="4"  fill="#ff6666"/>
+      <div class="cork-icon-wrap">
+        <svg viewBox="0 0 14 12" width="48" height="41" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="2,0 4,0 4,1 10,1 10,0 12,0 12,2 14,2 14,5 12,5 12,7 10,7 10,9 8,9 8,10 6,10 6,9 4,9 4,7 2,7 2,5 0,5 0,2 2,2" fill="#ee1111"/>
+          <polygon points="2,0 4,0 4,2 2,2" fill="#ff5555"/>
+          <polygon points="4,0 6,0 6,2 4,2" fill="#ff5555"/>
+          <polygon points="12,5 14,5 14,7 12,7 10,7 10,9 8,9 8,10 6,10 6,9 4,9 4,7 2,7 2,5" fill="#cc0000"/>
         </svg>
       </div>
       <div class="cork-stat-nums">
-        <div class="cork-stat-row pre"><span id="cork-hearts-pre">5</span><span class="cork-label">pre.</span></div>
-        <div class="cork-stat-row new-val" id="cork-hearts-delta">-2</div>
-        <div class="cork-stat-row total"><span id="cork-hearts-total">3</span><span class="cork-label">total</span></div>
+        <div class="cork-row-pre"><span id="cork-hearts-pre">5</span> <span class="cork-label">pre.</span></div>
+        <div class="cork-row-delta" id="cork-hearts-delta">-2</div>
+        <div class="cork-divider"></div>
+        <div class="cork-row-total"><span id="cork-hearts-total">3</span> <span class="cork-label">total</span></div>
       </div>
     </div>
     <div class="cork-bottom-row">
@@ -1342,6 +1411,7 @@ const state = {
   group:          'A',      // A, B, C, D
   money:          CONFIG.startingMoney,
   hearts:         CONFIG.startingHearts,
+  paused:         false,
   currentDay:     1,
   currentCaseIdx: 0,        // index into MASTER_SCRIPT
   timerVal:       CONFIG.timeLimit,
@@ -1546,16 +1616,20 @@ window.sceneController = (function() {
 
 
 
+// ── GROUP OVERRIDE FOR LOCAL FILE TESTING ──
+// Change this to 'A', 'B', 'C', or 'D' to test different groups
+// when opening as a local file (file:/// URLs don't support ?group=X)
+const LOCAL_GROUP_OVERRIDE = null; // e.g. set to 'D' to test Group D
+
 function getUrlGroup() {
+  if (LOCAL_GROUP_OVERRIDE) return LOCAL_GROUP_OVERRIDE;
   const params = new URLSearchParams(window.location.search);
   const g = (params.get('group') || 'A').toUpperCase();
   return ['A','B','C','D'].includes(g) ? g : 'A';
 }
 
 function heartsDisplay(n) {
-  if (n > 0) return '❤️'.repeat(n);
-  if (n === 0) return '0';
-  return '💔 ' + n; // negatives shown as 💔 -2 etc
+  return String(n);
 }
 
 function updateHUD() {
@@ -1725,7 +1799,13 @@ function renderCase() {
   if (!caseData) { endGame(); return; }
 
   state.sourceClicked = false;
+  state.paused = false;  // always unpause at start of new case
   state.caseStartTime = Date.now();
+  // Reset pause button label
+  const pbtn = document.getElementById('btn-pause');
+  if (pbtn) { pbtn.textContent = '⏸ PAUSE'; }
+  const poverlay = document.getElementById('pause-overlay');
+  if (poverlay) poverlay.style.display = 'none';
 
   // Question
   $('case-question').textContent = caseData.question;
@@ -1754,7 +1834,7 @@ function renderCase() {
   ['A','B','C','D'].forEach(letter => {
     const btn = document.createElement('button');
     btn.className = 'option-btn';
-    btn.dataset.label = `OPTION ${letter}`;
+    btn.dataset.label = letter;
     btn.textContent = caseData.options[letter];
     btn.addEventListener('click', () => submitAnswer(letter));
     grid.appendChild(btn);
@@ -1785,6 +1865,7 @@ function updateTimerDisplay() {
 }
 
 function tickTimer() {
+  if (state.paused) return; // skip tick while paused
   state.timerVal--;
   updateTimerDisplay();
 
@@ -1884,7 +1965,7 @@ function submitAnswer(chosen) {
     state.correctCount++;
   } else {
     state.money  -= CONFIG.penaltyMoney;
-    state.hearts  = Math.max(0, state.hearts - CONFIG.penaltyHearts);
+    state.hearts  = state.hearts - CONFIG.penaltyHearts;
   }
   logEntry.Money_After  = state.money;
   logEntry.Hearts_After = state.hearts;
@@ -1900,7 +1981,7 @@ function timeOut() {
 
   // Timeout counts as wrong
   state.money  -= CONFIG.penaltyMoney;
-  state.hearts  = Math.max(0, state.hearts - CONFIG.penaltyHearts);
+  state.hearts  = state.hearts - CONFIG.penaltyHearts;
 
   const logEntry = {
     Session_Time:      new Date().toISOString(),
@@ -2013,44 +2094,81 @@ function advanceCase() {
 }
 
 function showEndOfDay(isLastDay) {
+  stopTimer(); // safety: kill timer if still running
   const day = state.currentDay;
-  const endMsgs = {
-    1: 'Shift over. Let\'s review your daily performance.',
-    2: 'Shift over. Let\'s review your daily performance.',
-    3: 'Shift over. Let\'s review your daily performance.',
-    4: 'Shift over. Let\'s review your daily performance.',
-    5: 'Protocol Completed. Calculating final score…',
+
+  // Headlines and sticky notes per day
+  const headlines = {
+    1: 'DAY 1 DONE!', 2: 'NICE JOB TODAY!',
+    3: 'HALFWAY THERE!', 4: 'ALMOST DONE!', 5: 'FINAL DAY DONE!',
+  };
+  const stickyMsgs = {
+    1: 'you can do it!', 2: 'keep it up!',
+    3: 'stay sharp!', 4: "don't slip now!", 5: 'well done!',
   };
 
-  $('day-end-title').textContent = `END OF DAY ${day}`;
-  $('day-end-msg').textContent   = endMsgs[day] || endMsgs[1];
-  $('end-money').textContent     = state.money.toLocaleString();
-  $('end-hearts').textContent    = heartsDisplay(state.hearts);
+  $('day-end-title').textContent = headlines[day] || `DAY ${day} DONE!`;
+  $('cork-sticky-text').textContent = stickyMsgs[day] || 'keep going!';
 
-  // Render day results
-  const resultsEl = $('day-end-results');
-  resultsEl.innerHTML = '';
-  state.dayResults.forEach(r => {
-    const row = document.createElement('div');
-    const cls  = r.isAttentionCheck ? 'dr-attention' : (r.chosen === 'TIMEOUT' ? 'dr-timeout' : (r.correct ? 'dr-correct' : 'dr-wrong'));
-    row.className = `day-result-row ${cls}`;
-    const icon   = r.isAttentionCheck ? '🔔' : (r.chosen === 'TIMEOUT' ? '⏰' : (r.correct ? '✅' : '❌'));
-    const label  = r.isAttentionCheck ? 'ATTENTION' : (r.chosen === 'TIMEOUT' ? 'TIMEOUT' : (r.correct ? 'CORRECT' : 'WRONG'));
-    const qShort = r.caseData.question.slice(0, 55) + (r.caseData.question.length > 55 ? '…' : '');
-    row.innerHTML = `
-      <span class="dr-icon">${icon}</span>
-      <span class="dr-q">${qShort}</span>
-      <span class="dr-result">${label}</span>
-    `;
-    resultsEl.appendChild(row);
-  });
+  // Calculate money and hearts delta for this day
+  const dayLogs = state.log.filter(l => l.Day === day && !l.Is_Attention_Check);
+  const moneyBefore  = dayLogs.length > 0 ? dayLogs[0].Money_Before : state.money;
+  const heartsBefore = dayLogs.length > 0 ? dayLogs[0].Hearts_Before : state.hearts;
+  const moneyDelta   = state.money - moneyBefore;
+  const heartsDelta  = state.hearts - heartsBefore;
 
-  // Reset day results buffer for next day
+  $('cork-money-pre').textContent   = moneyBefore.toLocaleString();
+  $('cork-money-total').textContent = state.money.toLocaleString();
+  const mDeltaEl = $('cork-money-delta');
+  mDeltaEl.textContent  = (moneyDelta >= 0 ? '+' : '') + moneyDelta.toLocaleString();
+  mDeltaEl.className    = 'cork-row-delta' + (moneyDelta < 0 ? ' negative' : ' positive');
+
+  $('cork-hearts-pre').textContent   = heartsBefore;
+  $('cork-hearts-total').textContent = state.hearts;
+  const hDeltaEl = $('cork-hearts-delta');
+  hDeltaEl.textContent = (heartsDelta >= 0 ? '+' : '') + heartsDelta;
+  hDeltaEl.className   = 'cork-row-delta' + (heartsDelta < 0 ? ' negative' : ' positive');
+
+  // Medal label based on accuracy
+  const totalReal  = MASTER_SCRIPT.filter(c => c.day === day && !c.isAttentionCheck).length;
+  const correctDay = state.log.filter(l => l.Day === day && !l.Is_Attention_Check && l.Is_Correct).length;
+  const pct = totalReal > 0 ? correctDay / totalReal : 0;
+  const medalLabels = ['needs work', 'keep going', 'not bad!', 'great job!', 'perfect!'];
+  // Medal label set inside the per-day medal loop below
+
+  // Update progress bar fill: 0% at day 1, 25% per day after
+  const fillPct = ((day - 1) / 4) * 100;
+  const fillEl = document.getElementById('cork-medals-fill');
+  if (fillEl) fillEl.style.width = fillPct + '%';
+
+  // Update medal items: gold up to and including current day, grey for future days
+  for (let d = 1; d <= 5; d++) {
+    const item = document.getElementById('medal-day-' + d);
+    if (!item) continue;
+    const cir = item.querySelector('.medal-cir');
+    const rbn = item.querySelector('.medal-rbn');
+    const lbl = item.querySelector('.medal-lbl');
+    if (d <= day) {
+      // Earned — gold
+      cir.className = 'medal-cir medal-gold';
+      if (rbn) rbn.className = 'medal-rbn';
+      if (lbl) lbl.textContent = d === day
+        ? medalLabels[Math.round(pct * (medalLabels.length - 1))]
+        : 'day ' + d;
+    } else {
+      // Not yet — grey
+      cir.className = 'medal-cir medal-grey';
+      if (rbn) rbn.className = 'medal-rbn medal-rbn-grey';
+      if (lbl) lbl.textContent = 'day ' + d;
+    }
+  }
+
+  // Reset day buffer
   state.dayResults = [];
 
   const btnNext = $('btn-next-day');
   if (isLastDay) {
-    btnNext.textContent = 'Continue ▶';
+    btnNext.textContent = 'Finish ▶';
     btnNext.onclick = () => showScreen('screen-post-survey');
   } else {
     btnNext.textContent = 'Next Day ▶';
@@ -2089,6 +2207,19 @@ function endGame() {
 // ═══════════════════════════════════════════════════════════════
 
 const app = {
+  togglePause() {
+    state.paused = !state.paused;
+    const btn = document.getElementById('btn-pause');
+    const overlay = document.getElementById('pause-overlay');
+    if (state.paused) {
+      if (btn) { btn.textContent = '▶ RESUME'; }
+      if (overlay) overlay.style.display = 'flex';
+    } else {
+      if (btn) { btn.textContent = '⏸ PAUSE'; }
+      if (overlay) overlay.style.display = 'none';
+    }
+  },
+
   openHandbookFree() {
     // Free handbook access — timer keeps running, no source_checked flag
     state.handbookReturnScreen = 'screen-game';
@@ -2172,7 +2303,8 @@ function init() {
     const ret = state.handbookReturnScreen;
     if (ret === 'screen-game') {
       showScreen('screen-game');
-      // Resume timer from where it paused
+      // Resume timer — clear any existing interval first to prevent double-firing
+      clearInterval(state.timerInterval);
       state.timerInterval = setInterval(tickTimer, 1000);
     } else {
       showScreen(ret || 'screen-game');
