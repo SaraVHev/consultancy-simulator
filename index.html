@@ -1003,6 +1003,11 @@ const state = {
   timerVal: CONFIG.timeLimit, timerInterval: null, caseStartTime: null,
   sourceClicked: false, handbookReturnScreen: null, correctCount: 0,
   log: [], preSurveyAnswers: {}, postSurveyAnswers: {}, dayResults: [],
+  participantId: '',
+  sessionStart: 0,
+  totalSourceClicks: 0,
+  totalHandbookOpens: 0,
+  handbookClicksPerCase: {},
 };
 
 function $(id) { return document.getElementById(id); }
@@ -1404,12 +1409,19 @@ const app = {
     else { if (btn) btn.textContent = '⏸ PAUSE'; if (overlay) overlay.style.display = 'none'; }
   },
   openHandbookFree() {
+    state.totalHandbookOpens++;
+    const caseData = MASTER_SCRIPT[state.currentCaseIdx];
+    if (caseData) {
+      const cid = caseData.id;
+      state.handbookClicksPerCase[cid] = (state.handbookClicksPerCase[cid] || 0) + 1;
+    }
     state.handbookReturnScreen = 'screen-game'; buildHandbook(null); showScreen('screen-handbook');
   },
   handleSourceClick() {
     // First click: log that source was checked (for research data)
     if (!state.sourceClicked) {
       state.sourceClicked = true;
+      state.totalSourceClicks++;
       // Mark the inline link visually as visited (stays clickable)
       const inlineBtn = document.getElementById('inline-source-btn');
       if (inlineBtn) {
@@ -1431,10 +1443,212 @@ function showDebrief() {
   $('final-hearts-display').textContent = heartsDisplay(state.hearts);
   $('final-correct').textContent = `${state.correctCount}/15`;
   showScreen('screen-debrief');
+  // Submit all data to Google Forms silently
+  submitToGoogleForms();
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// 15. GOOGLE FORMS SUBMISSION
+// ═══════════════════════════════════════════════════════════════
+
+const FORM_ACTION = 'https://docs.google.com/forms/d/e/1FAIpQLSemu0vw5yPTBNqyeK8-lrmY0ykuQz2j4aTAymRjTiHX5r6svQ/formResponse';
+
+const ENTRY = {
+  Participant_ID:                   'entry.733987842',
+  AI_Group:                         'entry.1113719014',
+  var_age:                          'entry.1221966372',
+  var_gender:                       'entry.2026128018',
+  var_country:                      'entry.977036641',
+  var_language:                     'entry.1152807055',
+  var_industry:                     'entry.1153911213',
+  var_first_time:                   'entry.45265018',
+  C01_Answer_letter:                'entry.148985050',
+  C01_Answer_correct:               'entry.715286617',
+  C01_Handbook_click:               'entry.102677186',
+  C01_Answer_time:                  'entry.1717130648',
+  C01_Source_click:                 'entry.1916058030',
+  C02_Answer_letter:                'entry.906821424',
+  C02_Answer_correct:               'entry.581829643',
+  C02_Handbook_click:               'entry.1168244491',
+  C02_Answer_time:                  'entry.499523360',
+  C02_Source_click:                 'entry.307720846',
+  C03_Answer_letter:                'entry.605340000',
+  C03_Answer_correct:               'entry.995184726',
+  C03_Handbook_click:               'entry.1971750275',
+  C03_Answer_time:                  'entry.139348695',
+  C03_Source_click:                 'entry.229846765',
+  Attention_Check_1_Answer_letter:  'entry.1200146359',
+  Attention_Check_1_Handbook:       'entry.1485317159',
+  Attention_Check_1_Answer_time:    'entry.873345015',
+  Attention_Check_1_Answer_correct: 'entry.1909546184',
+  C04_Answer_letter:                'entry.2051867795',
+  C04_Answer_correct:               'entry.468448134',
+  C04_Handbook_click:               'entry.552999071',
+  C04_Answer_time:                  'entry.1781674199',
+  C04_Source_click:                 'entry.1609500482',
+  C05_Answer_letter:                'entry.1841041753',
+  C05_Answer_correct:               'entry.426609815',
+  C05_Handbook_click:               'entry.1190897291',
+  C05_Answer_time:                  'entry.1019987641',
+  C05_Source_click:                 'entry.1671305004',
+  C06_Answer_letter:                'entry.1739697033',
+  C06_Answer_correct:               'entry.213684777',
+  C06_Handbook_click:               'entry.1290307477',
+  C06_Answer_time:                  'entry.1505401856',
+  C06_Source_click:                 'entry.409088208',
+  C07_Answer_letter:                'entry.974076110',
+  C07_Answer_correct:               'entry.1156939144',
+  C07_Handbook_click:               'entry.158001013',
+  C07_Answer_time:                  'entry.1709859',
+  C07_Source_click:                 'entry.1545425828',
+  C08_Answer_letter:                'entry.488798038',
+  C08_Answer_correct:               'entry.497449882',
+  C08_Handbook_click:               'entry.1775049445',
+  C08_Answer_time:                  'entry.193123641',
+  C08_Source_click:                 'entry.397867012',
+  C09_Answer_letter:                'entry.1050410904',
+  C09_Answer_correct:               'entry.832468189',
+  C09_Handbook_click:               'entry.1448625013',
+  C09_Answer_time:                  'entry.1537177429',
+  C09_Source_click:                 'entry.1017394060',
+  C10_Answer_letter:                'entry.1336084191',
+  C10_Answer_correct:               'entry.613835940',
+  C10_Handbook_click:               'entry.137163908',
+  C10_Answer_time:                  'entry.1638321271',
+  C10_Source_click:                 'entry.444421290',
+  C11_Answer_letter:                'entry.769146990',
+  C11_Answer_correct:               'entry.1539455779',
+  C11_Handbook_click:               'entry.1894782945',
+  C11_Answer_time:                  'entry.1121681865',
+  C11_Source_click:                 'entry.1818734584',
+  C12_Answer_letter:                'entry.1869114975',
+  C12_Answer_correct:               'entry.2142453924',
+  C12_Handbook_click:               'entry.1919907350',
+  C12_Answer_time:                  'entry.1303791980',
+  C12_Source_click:                 'entry.237962379',
+  C13_Answer_letter:                'entry.47866570',
+  C13_Answer_correct:               'entry.1169737885',
+  C13_Handbook_click:               'entry.145653051',
+  C13_Answer_time:                  'entry.1461059109',
+  C13_Source_click:                 'entry.475926666',
+  C14_Answer_letter:                'entry.551116737',
+  C14_Answer_correct:               'entry.1488442568',
+  C14_Handbook_click:               'entry.1888487695',
+  C14_Answer_time:                  'entry.1402187457',
+  C14_Source_click:                 'entry.426342915',
+  Attention_Check_2_Answer_letter:  'entry.477758022',
+  Attention_Check_2_Handbook_click: 'entry.23129511',
+  Attention_Check_2_Answer_time:    'entry.1166650143',
+  Attention_Check_2_Answer_correct: 'entry.865929340',
+  C15_Answer_letter:                'entry.741787846',
+  C15_Answer_correct:               'entry.2061265409',
+  C15_Handbook_click:               'entry.551582151',
+  C15_Answer_time:                  'entry.264346520',
+  C15_Source_click:                 'entry.84431943',
+  Source_Clicks_Total:              'entry.1441040066',
+  Handbook_Opens_Total:             'entry.1726215880',
+  'TI-WTD_1':                       'entry.1906179344',
+  'TI-WTD_2':                       'entry.550271028',
+  'TI-WTD_3':                       'entry.605583815',
+  'TI-WTD_4':                       'entry.424642066',
+  'TI-WTD_5':                       'entry.630164634',
+  'Ex-Q_1':                          'entry.1030800885',
+  'Ex-Q_2':                          'entry.402406700',
+  Final_Money:                      'entry.243098024',
+  Final_Hearts:                     'entry.1733300402',
+  Correct_Count:                    'entry.372622152',
+  Session_Duration_Seconds:         'entry.844709275',
+};
+
+function getCaseData(caseId) {
+  // Find log entry for this case
+  const entry = state.log.find(l => l.Case_ID === caseId);
+  if (!entry) return { letter: '', correct: '', handbook: 0, time: '', source: 0 };
+  return {
+    letter:   entry.Chosen_Option || '',
+    correct:  entry.Is_Correct ? 'correct' : (entry.Chosen_Option === 'TIMEOUT' ? 'timeout' : 'wrong'),
+    handbook: state.handbookClicksPerCase[caseId] || 0,
+    time:     entry.Deliberation_Time || '',
+    source:   entry.Source_Checked ? 1 : 0,
+  };
+}
+
+function submitToGoogleForms() {
+  const sessionEnd = Date.now();
+  const sessionDuration = Math.round((sessionEnd - state.sessionStart) / 1000);
+
+  // Build form data
+  const fd = new FormData();
+
+  // Participant & group
+  fd.append(ENTRY.Participant_ID, state.participantId);
+  fd.append(ENTRY.AI_Group, state.group);
+
+  // Pre-survey answers
+  fd.append(ENTRY.var_age,         state.preSurveyAnswers.var_age || '');
+  fd.append(ENTRY.var_gender,      state.preSurveyAnswers.var_gender || '');
+  fd.append(ENTRY.var_country,     state.preSurveyAnswers.var_country || '');
+  fd.append(ENTRY.var_language,    state.preSurveyAnswers.var_language || '');
+  fd.append(ENTRY.var_industry,    state.preSurveyAnswers.var_industry || '');
+  fd.append(ENTRY.var_first_time,  state.preSurveyAnswers.var_first_time || '');
+
+  // Case data
+  const cases = [
+    ['C01','C01'],['C02','C02'],['C03','C03'],
+    ['Attention_Check_1','Attention_Check_1'],
+    ['C04','C04'],['C05','C05'],['C06','C06'],
+    ['C07','C07'],['C08','C08'],['C09','C09'],
+    ['C10','C10'],['C11','C11'],['C12','C12'],
+    ['C13','C13'],['C14','C14'],
+    ['Attention_Check_2','Attention_Check_2'],
+    ['C15','C15'],
+  ];
+
+  cases.forEach(([caseId, prefix]) => {
+    const d = getCaseData(caseId);
+    const isAttention = caseId.startsWith('Attention');
+
+    fd.append(ENTRY[prefix + '_Answer_letter'], d.letter);
+    fd.append(ENTRY[prefix + '_Answer_correct'], d.correct);
+    fd.append(ENTRY[prefix + (isAttention ? '_Handbook' : '_Handbook_click')], d.handbook);
+    fd.append(ENTRY[prefix + '_Answer_time'], d.time);
+    if (!isAttention) {
+      fd.append(ENTRY[prefix + '_Source_click'], d.source);
+    }
+  });
+
+  // Totals
+  fd.append(ENTRY.Source_Clicks_Total,   state.totalSourceClicks);
+  fd.append(ENTRY.Handbook_Opens_Total,  state.totalHandbookOpens);
+
+  // Post-survey
+  fd.append(ENTRY['TI-WTD_1'], state.postSurveyAnswers['TI-WTD_1'] || '');
+  fd.append(ENTRY['TI-WTD_2'], state.postSurveyAnswers['TI-WTD_2'] || '');
+  fd.append(ENTRY['TI-WTD_3'], state.postSurveyAnswers['TI-WTD_3'] || '');
+  fd.append(ENTRY['TI-WTD_4'], state.postSurveyAnswers['TI-WTD_4'] || '');
+  fd.append(ENTRY['TI-WTD_5'], state.postSurveyAnswers['TI-WTD_5'] || '');
+  fd.append(ENTRY['Ex-Q_1'],   state.postSurveyAnswers['Ex-Q_1'] || '');
+  fd.append(ENTRY['Ex-Q_2'],   state.postSurveyAnswers['Ex-Q_2'] || '');
+
+  // Final scores
+  fd.append(ENTRY.Final_Money,           state.money);
+  fd.append(ENTRY.Final_Hearts,          state.hearts);
+  fd.append(ENTRY.Correct_Count,         state.correctCount);
+  fd.append(ENTRY.Session_Duration_Seconds, sessionDuration);
+
+  // Submit silently via no-cors fetch (Google Forms doesn't allow CORS but submission still works)
+  fetch(FORM_ACTION, { method: 'POST', body: fd, mode: 'no-cors' })
+    .then(() => console.log('Data submitted to Google Forms'))
+    .catch(e => console.warn('Submission error:', e));
 }
 
 function init() {
   state.group = getUrlGroup();
+  // Generate unique participant ID for this session
+  state.participantId = 'P-' + Math.random().toString(36).substr(2,9).toUpperCase() +
+                        '-' + Date.now().toString(36).toUpperCase();
+  state.sessionStart = Date.now();
   // Hide all screens immediately via inline style
   document.querySelectorAll('.screen').forEach(s => { s.style.display = 'none'; });
   buildPreSurvey(); buildPostSurvey(); buildHandbook(null);
