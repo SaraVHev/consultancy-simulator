@@ -552,12 +552,12 @@ html, body {
   </div>
 </div>
 
-<!-- SCREEN 2: PRE-GAME INTERVIEW -->
+<!-- SCREEN 2: JOB INTERVIEW -->
 <div id="screen-pre-survey" class="screen">
   <div class="screen-inner centered-column">
     <div class="survey-header">
       <div class="survey-icon">📊</div>
-      <h2 class="survey-title">PRE-GAME INTERVIEW</h2>
+      <h2 class="survey-title">JOB INTERVIEW</h2>
       <div class="survey-sub">A few questions before you start</div>
     </div>
     <div id="pre-survey-form" class="survey-form"></div>
@@ -617,12 +617,7 @@ html, body {
         <span id="hud-money" class="hud-stat-val">1000</span>
       </div>
       <div class="hud-stat">
-        <svg viewBox="0 0 14 12" width="24" height="21" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="2,0 4,0 4,1 10,1 10,0 12,0 12,2 14,2 14,5 12,5 12,7 10,7 10,9 8,9 8,10 6,10 6,9 4,9 4,7 2,7 2,5 0,5 0,2 2,2" fill="#ee1111"/>
-          <polygon points="2,0 4,0 4,2 2,2" fill="#ff5555"/>
-          <polygon points="4,0 6,0 6,2 4,2" fill="#ff5555"/>
-          <polygon points="12,5 14,5 14,7 12,7 10,7 10,9 8,9 8,10 6,10 6,9 4,9 4,7 2,7 2,5" fill="#cc0000"/>
-        </svg>
+        <span style="font-size:16px;line-height:1;">❤️</span>
         <span id="hud-hearts" class="hud-stat-val">5</span>
       </div>
     </div>
@@ -826,12 +821,7 @@ html, body {
     </div>
     <div class="cork-stat-block">
       <div class="cork-icon-wrap">
-        <svg viewBox="0 0 14 12" width="48" height="41" xmlns="http://www.w3.org/2000/svg">
-          <polygon points="2,0 4,0 4,1 10,1 10,0 12,0 12,2 14,2 14,5 12,5 12,7 10,7 10,9 8,9 8,10 6,10 6,9 4,9 4,7 2,7 2,5 0,5 0,2 2,2" fill="#ee1111"/>
-          <polygon points="2,0 4,0 4,2 2,2" fill="#ff5555"/>
-          <polygon points="4,0 6,0 6,2 4,2" fill="#ff5555"/>
-          <polygon points="12,5 14,5 14,7 12,7 10,7 10,9 8,9 8,10 6,10 6,9 4,9 4,7 2,7 2,5" fill="#cc0000"/>
-        </svg>
+        <span style="font-size:44px;line-height:1;">❤️</span>
       </div>
       <div class="cork-stat-nums">
         <div class="cork-row-pre"><span id="cork-hearts-pre">5</span> <span class="cork-label">pre.</span></div>
@@ -1176,6 +1166,7 @@ function showCategory(cat) {
 }
 
 function getAIText(caseData) {
+  // Note: Group D rendering is handled directly in renderCase for dual-layer structure
   return (state.group === 'A' || state.group === 'B') ? caseData.aiAssertive : caseData.aiHedged;
 }
 
@@ -1186,15 +1177,54 @@ function renderCase() {
   const pbtn = document.getElementById('btn-pause'); if (pbtn) pbtn.textContent = '⏸ PAUSE';
   const poverlay = document.getElementById('pause-overlay'); if (poverlay) poverlay.style.display = 'none';
   $('case-question').textContent = caseData.question;
-  $('ai-advice').textContent = getAIText(caseData);
+
+  // Build AI advice
   const showSource = (state.group === 'B' || state.group === 'D') && !caseData.isAttentionCheck && caseData.handbookRef;
+  const adviceEl = $('ai-advice');
+  adviceEl.innerHTML = '';
+
+  function makeSourceSpan() {
+    const s = document.createElement('span');
+    s.id = 'inline-source-btn';
+    s.textContent = '[📖 check source]';
+    s.style.cssText = 'color:#00ff88;font-family:"Press Start 2P",monospace;font-size:6px;cursor:pointer;text-decoration:underline;white-space:nowrap;letter-spacing:0.5px;';
+    s.onclick = () => app.handleSourceClick();
+    return s;
+  }
+
+  if (state.group === 'D' && showSource) {
+    // Dual-layer: AI actively invites user to check source BEFORE giving hedged advice
+    adviceEl.appendChild(document.createTextNode('I recommend you verify this — '));
+    adviceEl.appendChild(makeSourceSpan());
+    adviceEl.appendChild(document.createTextNode(' — ' + caseData.aiHedged));
+  } else if (state.group === 'B' && showSource) {
+    // Group B: assertive advice, source link appended at end
+    adviceEl.appendChild(document.createTextNode(caseData.aiAssertive + ' '));
+    adviceEl.appendChild(makeSourceSpan());
+  } else {
+    // Groups A and C: plain text only
+    adviceEl.appendChild(document.createTextNode(
+      (state.group === 'A') ? caseData.aiAssertive : caseData.aiHedged
+    ));
+  }
+
+  // Keep the old btn-source hidden (all groups use inline link now)
   const srcBtn = $('btn-source');
-  if (showSource) { srcBtn.style.display = 'inline-block'; srcBtn.classList.remove('clicked'); srcBtn.textContent = '📖 CHECK SOURCE'; srcBtn.disabled = false; }
-  else { srcBtn.style.display = 'none'; }
+  if (srcBtn) srcBtn.style.display = 'none';
   const grid = $('options-grid'); grid.innerHTML = '';
-  ['A','B','C','D'].forEach(letter => {
-    const btn = document.createElement('button'); btn.className = 'option-btn'; btn.dataset.label = letter;
-    btn.textContent = caseData.options[letter]; btn.addEventListener('click', () => submitAnswer(letter)); grid.appendChild(btn);
+  // Shuffle display order — prevents position bias, correct answer letter unchanged in logs
+  const letters = ['A','B','C','D'];
+  for (let i = letters.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [letters[i], letters[j]] = [letters[j], letters[i]];
+  }
+  letters.forEach((letter, idx) => {
+    const displayLabel = ['A','B','C','D'][idx]; // visual label A/B/C/D in display order
+    const btn = document.createElement('button'); btn.className = 'option-btn';
+    btn.dataset.label = displayLabel;
+    btn.textContent = caseData.options[letter];
+    btn.addEventListener('click', () => submitAnswer(letter)); // logs the TRUE letter
+    grid.appendChild(btn);
   });
   updateHUD(); resetTimer(); resetManagerAvatar(); showScreen('screen-game');
 }
@@ -1375,11 +1405,22 @@ const app = {
     state.handbookReturnScreen = 'screen-game'; buildHandbook(null); showScreen('screen-handbook');
   },
   handleSourceClick() {
-    if (state.sourceClicked) return;
-    state.sourceClicked = true;
-    const srcBtn = $('btn-source'); srcBtn.classList.add('clicked'); srcBtn.textContent = '✅ SOURCE CHECKED'; srcBtn.disabled = true;
+    // First click: log that source was checked (for research data)
+    if (!state.sourceClicked) {
+      state.sourceClicked = true;
+      // Mark the inline link visually as visited (stays clickable)
+      const inlineBtn = document.getElementById('inline-source-btn');
+      if (inlineBtn) {
+        inlineBtn.textContent = '[📖 source ✓]';
+        inlineBtn.style.color = '#00cc6a';
+      }
+    }
+    // Always open handbook — user can check source multiple times
     const caseData = MASTER_SCRIPT[state.currentCaseIdx];
-    state.handbookReturnScreen = 'screen-game'; stopTimer(); buildHandbook(caseData.handbookRef); showScreen('screen-handbook');
+    state.handbookReturnScreen = 'screen-game';
+    stopTimer();
+    buildHandbook(caseData.handbookRef);
+    showScreen('screen-handbook');
   }
 };
 
